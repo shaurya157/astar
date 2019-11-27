@@ -31,10 +31,47 @@ class AStar{
     while(heap.size() > 0){
       //Using min-heap's property, we grab the lowest function to process
       let currNode = heap.pop();
+
+      //end case of result being found
       if(currNode === end){
-        return path(currNode)
+        return path(currNode);
       }
+
+      //regular case: moving the current node from open to close, then process it's neighbours
+      currNode.close = true;
+      let neighbours = this.graph.neighbours(currNode);
+
+      neighbours.forEach((neighbour) => {
+        //Wall detection or closed neighbour I.E. has been processed
+        if(neighbour.close || neighbour.isWall()){
+          continue;
+        } else {
+          let gScore = currNode.g + neighbour.getCost(currNode);
+          let visited = neighbour.visited;
+
+          //G score is the shorted distance from current Node to start..
+          // Check if the path we arrived at the neighbour is the shortest path yet encountered
+          if(gScore < neighbour.g || !visited){
+            neighbour.visited = true;
+            neighbour.parent = currNode;
+
+            neighbour.h = neighbour.h == 0 ? heuristic(neighbour, end) : neighbour.h
+            neighbour.g = gScore;
+            neighbour.f = neighbour.g + neighbour.h;
+
+            graph.makeNodeDirty(neighbour);
+
+            if(!visited){
+              heap.push(neighbour);
+            } else {
+              heap.rescore(neighbour);
+            }
+          }
+        }
+      })
     }
+
+    return []; //no path found
   }
 
   getHeap(){
